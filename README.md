@@ -1,6 +1,6 @@
 # WVC-Inverters-Esphome
 WVC RF microinverters components for esphome
-
+based on the work by [@krywenko ](https://github.com/krywenko/WVC-Inverter-R2-R3-HC-12--and--Modem)
 
 It works with both HW revisions of WVC inverters that work with HC-12 RF module, for R2 inverters only WVC1200 is supported (wrong values for other models), only 4 wires needed, VCC (3.3v), GND, TX-> RX and RX->TX
 
