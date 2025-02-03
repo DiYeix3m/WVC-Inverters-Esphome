@@ -94,7 +94,7 @@ void WVCComponent::send_command(uint8_t *command, size_t length, uint8_t expecte
   expected_start_byte = expected_start_byte_;
   expected_length = expected_length_;
   waiting_for_response = true;
-  ESP_LOGD(TAG, "Sent command %hhX, size: %d, expected lenght: %d to inverter %s, %d", expected_start_byte, length, expected_length, device_id.c_str(), millis());
+  ESP_LOGD(TAG, "Sent command %hhX, size: %d, expected lenght: %d to inverter %s", expected_start_byte, length, expected_length, device_id.c_str());
   last_device_query_time = millis();
 }
 
