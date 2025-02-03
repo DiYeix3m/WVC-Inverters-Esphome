@@ -1,0 +1,82 @@
+substitutions:
+  name: WVC1200
+  device_description: "Monitor and control WVC RF Microinverters"
+  external_components_source: github://DiYeix3m/WVC-Inverters-Esphome@main
+
+
+esphome:
+  name: ${name}
+  comment: ${device_description}
+  min_version: 2024.12.2
+  project:
+    name: "diyeix3m.wvc-inverters-esphome"
+    version: 0.0.1
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "YOURKEY"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  output_power: 20
+  fast_connect: true
+
+ota:
+  platform: esphome
+  password: "YOURPASSWORD"
+
+logger:
+  level: VERBOSE
+
+uart:
+  tx_pin: GPIO16
+  rx_pin: GPIO17
+  baud_rate: 9600
+  parity: NONE
+  data_bits: 8
+  stop_bits: 1
+  id: uart_0
+
+wvc:
+  - id: wvc2
+    inverter_type: "R3"
+    inverter_sn: "60000F15"
+    throttle: 5000ms
+
+
+sensor:
+  # Define sensors
+  - platform: wvc
+    wvc_id: wvc1
+    vac:
+      name: "${name} VAC"
+    aac:
+      name: "${name} AAC"
+    vdc:
+      name: "${name} VCD"
+    adc:
+      name: "${name} ADC"
+    eff:
+      name: "${name} Efficiency"
+    acw:
+      name: "${name} ACW"
+    dcw:
+      name: "${name} DCW"
+    temperature:
+      name: "${name} Temperature"
+
+text_sensor:
+  - platform: wvc
+    wvc_id: wvc1
+    serial_number:
+      name: "${name} Serial Number"
+    hardware_revision:
+      name: "${name} HW Revision"
