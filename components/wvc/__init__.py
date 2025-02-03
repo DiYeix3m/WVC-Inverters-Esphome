@@ -12,7 +12,7 @@ MULTI_CONF = True
 wvc_ns = cg.esphome_ns.namespace("wvc")
 WVCComponent = wvc_ns.class_("WVCComponent", uart.UARTDevice, cg.Component)
 
-CONF_ID = "wvc_id"
+CONF_WVC_ID = "wvc_id"
 CONF_INVERTER_TYPE = "inverter_type"
 CONF_INVERTER_SN = "inverter_sn"
 CONF_THROTTLE = "throttle"
@@ -22,7 +22,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.GenerateID(): cv.declare_id(WVCComponent),
         cv.Required(CONF_INVERTER_TYPE): cv.string,
         cv.Required(CONF_INVERTER_SN): cv.string,
-        cv.Optional(CONF_THROTTLE, default="5s"): cv.time_period,
+        cv.Optional(CONF_THROTTLE, default="5s"): cv.positive_time_period_milliseconds,
     }
 ).extend(uart.UART_DEVICE_SCHEMA)
 
