@@ -33,6 +33,6 @@ def to_code(config):
     for key in TEXT_SENSORS:
         if key in config:
             conf = config[key]
-            sens = cg.new_Pvariable(conf[CONF_WVC_ID])
+            sens = cg.new_Pvariable(conf[CONF_ID])
             yield text_sensor.register_text_sensor(sens, conf)
             cg.add(getattr(hub, f"set_{key}_text_sensor")(sens))
