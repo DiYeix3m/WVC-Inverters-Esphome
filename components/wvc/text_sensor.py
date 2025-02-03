@@ -18,7 +18,7 @@ TEXT_SENSORS = [
 
 CONFIG_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(CONF_WVC_ID): cv.use_id(WVCComponent),
+        cv.GenerateID(CONF_ID): cv.use_id(WVCComponent),
         cv.Optional(CONF_SERIAL_NUMBER): text_sensor.TEXT_SENSOR_SCHEMA.extend(
             {cv.GenerateID(): cv.declare_id(text_sensor.TextSensor)}
         ),
