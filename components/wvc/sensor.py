@@ -15,7 +15,7 @@ from esphome.const import (
     UNIT_VOLT,
     UNIT_WATT,
 )
-from . import WVCComponent
+from . import CONF_ID, WVCComponent
 
 DEPENDENCIES = ["wvc"]
 
