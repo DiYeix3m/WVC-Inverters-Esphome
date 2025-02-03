@@ -15,7 +15,7 @@ from esphome.const import (
     UNIT_VOLT,
     UNIT_WATT,
 )
-from . import CONF_ID, WVCComponent
+from . import CONF_WVC_ID, WVCComponent
 
 DEPENDENCIES = ["wvc"]
 
@@ -56,7 +56,7 @@ def create_sensor_schema(unit, icon, accuracy, device_class):
 
 CONFIG_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(CONF_ID): cv.use_id(WVCComponent),
+        cv.GenerateID(CONF_WVC_ID): cv.use_id(WVCComponent),
         cv.Optional(CONF_TEMPERATURE): create_sensor_schema(
             unit=UNIT_CELSIUS, icon=ICON_TEMPERATURE_C, accuracy=0, device_class=DEVICE_CLASS_TEMPERATURE,
         ),
@@ -85,7 +85,7 @@ CONFIG_SCHEMA = cv.Schema(
 )
 
 def to_code(config):
-    hub = yield cg.get_variable(config[CONF_ID])
+    hub = yield cg.get_variable(config[CONF_WVC_ID])
     for key in SENSORS:
         if key in config:
             conf = config[key]
