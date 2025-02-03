@@ -17,6 +17,9 @@ esp32:
   framework:
     type: esp-idf
 
+external_components:
+  - source: ${external_components_source}
+    refresh: 0s
 
 # Enable Home Assistant API
 api:
