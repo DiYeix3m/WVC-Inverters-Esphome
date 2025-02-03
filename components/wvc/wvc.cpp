@@ -83,7 +83,7 @@ while (available() > 0) {
         }
     }
    if (waiting_for_response && millis() - last_device_query_time >= throttle_) {
-    ESP_LOGW(TAG, "Response timeout: %hhx, %s", buffer[0], inverter_sn_c_str());
+    ESP_LOGW(TAG, "Response timeout: %hhx, %s", buffer[0], inverter_sn.c_str());
     buffer.clear();
     waiting_for_response = false;
   }   
