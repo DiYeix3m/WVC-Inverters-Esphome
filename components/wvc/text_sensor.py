@@ -3,7 +3,7 @@ import esphome.config_validation as cv
 from esphome.components import text_sensor
 from esphome.const import CONF_ID
 
-from . import CONF_WVC_ID, WVCComponent
+from . import CONF_ID, WVCComponent
 
 DEPENDENCIES = ["wvc"]
 
@@ -29,7 +29,7 @@ CONFIG_SCHEMA = cv.Schema(
 )
 
 def to_code(config):
-    hub = yield cg.get_variable(config[CONF_WVC_ID])
+    hub = yield cg.get_variable(config[CONF_ID])
     for key in TEXT_SENSORS:
         if key in config:
             conf = config[key]
