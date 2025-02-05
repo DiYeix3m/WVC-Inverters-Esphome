@@ -23,10 +23,13 @@ public:
   void set_dcw_sensor(sensor::Sensor *sensor);
   void set_temperature_sensor(sensor::Sensor *sensor);
   void set_serial_number_text_sensor(text_sensor::TextSensor *serial_number_text_sensor) {
-   serial_number_text_sensor_ = serial_number_text_sensor;
+    serial_number_text_sensor_ = serial_number_text_sensor;
+  }
+  void set_model_text_sensor(text_sensor::TextSensor *model_text_sensor) {
+    model_text_sensor_ = model_text_sensor;
   }
   void set_hardware_revision_text_sensor(text_sensor::TextSensor *hardware_revision_text_sensor) {
-   hardware_revision_text_sensor_ = hardware_revision_text_sensor;
+    hardware_revision_text_sensor_ = hardware_revision_text_sensor;
   }
 
  protected:
