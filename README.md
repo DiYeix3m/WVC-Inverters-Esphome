@@ -11,6 +11,7 @@ R2 inverters supported:
 - WVC600
 - WVC860
 - WVC1200
+
 R3 inverters supported:
 - All models
 
