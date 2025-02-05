@@ -10,7 +10,7 @@ esphome:
   min_version: 2024.12.2
   project:
     name: "diyeix3m.wvc-inverters-esphome"
-    version: 0.0.1
+    version: 0.0.2
 
 esp32:
   board: esp32dev
@@ -49,9 +49,9 @@ uart:
   id: uart_0
 
 wvc:
-  - id: wvc2
-    inverter_type: "R3"
-    inverter_sn: "60000F15"
+  - id: wvc1
+    inverter_model: "WVC1200"
+    inverter_sn: "c1c1"
     throttle: 5000ms
 
 
@@ -83,3 +83,5 @@ text_sensor:
       name: "${name} Serial Number"
     hardware_revision:
       name: "${name} HW Revision"
+    model:
+      name: "${name} Model"
