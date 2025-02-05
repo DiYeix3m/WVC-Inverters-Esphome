@@ -1,6 +1,7 @@
 #include "wvc.h"
 #include "esphome/core/log.h"
 #include "esphome/components/uart/uart.h"
+#include "lookup.h"
 
 namespace esphome {
 namespace wvc {
@@ -15,6 +16,7 @@ static unsigned long last_byte_time = millis();
 void WVCComponent::setup() {
 	publish_state_once_(serial_number_text_sensor_, inverter_sn_);
 	publish_state_once_(hardware_revision_text_sensor_, inverter_type_);
+	publish_state_once_(model_text_sensor_, inverter_model_);
 }
 
 void WVCComponent::loop() {
@@ -99,84 +101,205 @@ void WVCComponent::send_command(uint8_t *command, size_t length, uint8_t expecte
 	ESP_LOGD(TAG, "Sent command %hhX, size: %d, expected lenght: %d to inverter %s", expected_start_byte, length, expected_length, device_id.c_str());
 	last_device_query_time = millis();
 }
+float WVCComponent::r2_values(std::string type, uint16_t value) {
+	std::string key = type + std::to_string(value);
+	ESP_LOGD(TAG, "Looking up key: %s", key.c_str());
+	auto it = lookup.find(key);
+	if (it != lookup.end()) {
+		return it->second;
+	} else {
+		ESP_LOGW(TAG, "Key not found in lookup: %s", key.c_str());
+		return 0;
+	}
+	ESP_LOGD(TAG, "Decoded value: %u", value);
+}
 
 void WVCComponent::parse_response(const std::string &response) {
+	float VAC = 0; 
+	float VDC = 0;
+	float ADC = 0;
+	float ACW = 0;
+	int TEMP = 0;
+	float AAC = 0;
+	float DCW = 0;
+	float EFF = 0;
+	int indexADC = 0;
+	int indexAAC = 0;
+
 	if (response.length() == 19) {
-		float VAC = static_cast<uint16_t>((response[13] << 8) | response[12]) * 0.88;
-
-		float VDC = static_cast<uint16_t>((response[9] << 8) | response[8]) * (108.506 / 1023);
-
-		float AAC = static_cast<uint16_t>((response[11] << 8) | response[10]) * (9.71 / 1023);
-
-		float ADC = static_cast<uint16_t>((response[7] << 8) | response[6]) * (70.5705 / 1023);
-
-		int16_t TEMP = temp_r2_lookup(static_cast<int16_t>(response[14]));
-
-		float ACW = VAC * AAC;
-
-		float DCW = VDC * ADC;
-
-		float EFF = (DCW > 0) ? (ACW / DCW) : 0;
-
-		if (EFF < 1) {
-			EFF = round(EFF * 100);
-		} else {
-			EFF = 0;
+		TEMP = r2_values("TMP", static_cast<int16_t>(response[14]));
+		VAC = static_cast<uint16_t>((response[13] << 8) | response[12]) * 0.815624;
+		if (VAC > 50 || VAC < 134){
+			VAC+=5.7;
+		}
+		VDC = static_cast<uint16_t>((response[9] << 8) | response[8]) * 0.10606;
+		float constants_array[18] =    {0.016035, 0.002436, 0.001315,
+						0.016035, 0.002574, 0.001415,
+						0.039361, 0.004865, 0.004865,
+						0.039361, 0.004865, 0.004865,
+						0.034213, 0.007175, 0.007175,
+						0.068983, 0.009647, 0.009491};
+		if (inverter_model_ == "WVC295"){
+			indexADC = 0;
+			if (VAC < 160){
+				indexAAC = 1;
+				//"AACA"
+			}else{
+				indexAAC = 2;
+				//"AACB"
+			}
 		}
 
+		if (inverter_model_ == "WVC300"){
+			indexADC = 3;
+			if (VAC < 160){
+				indexAAC = 4;
+				//"AACA"
+			}else{
+				indexAAC = 5;
+				//"AACB"
+			}
+		}
+
+		if (inverter_model_ == "WVC350"){
+			indexADC = 6;
+			if (VAC < 160){
+				indexAAC = 7;
+				//"AACA"
+			}else{
+				indexAAC = 8;
+				//"AACB"
+				}
+			}
+
+		if (inverter_model_ == "WV600"){
+			indexADC = 9;
+			if (VAC < 160){
+				indexAAC = 10;
+				//"AACA"
+				}else{
+					indexAAC = 11;
+					//"AACB"
+					}
+			}
+
+		if (inverter_model_ == "WVC850"){
+			indexADC = 12;
+			if (VAC < 160){
+				indexAAC = 13;
+				//"AACA"
+				}else{
+					indexAAC = 14;
+					//"AACB"
+					}
+			}
+
+		if (inverter_model_ == "WVC1200"){
+			indexADC = 15;
+			if (VAC < 160){
+				indexAAC = 16;
+				//"AACA"
+				}
+				else{
+					indexAAC = 17;
+					//"AACB"
+					}
+			}
+/*
+//295
+"ADC1023"	16.404	0.016035191 0
+"AACA1023"	2.4922	0.002436168 1
+"AACB1023"	1.346	0.001315738 2
+//300
+"ADC1023"	16.404	0.016035191 3
+"AACA1023"	2.6342	0.002574976 4
+"AACB1023"	1.4481	0.001415543 5
+//350
+"ADC1023"	40.267	0.039361681 6
+"AACA1023"	4.9776	0.004865689 7
+"AACB1023"	4.9776	0.004865689 8
+//600
+"ADC1023"	40.267	0.039361681 9
+"AACA1023"	4.9776	0.004865689 10
+"AACB1023"	4.9776	0.004865689 11
+//850
+"ADC1023"	35   	0.034213099 12
+"AACA1023"	7.3401	0.007175073 13
+"AACB1023"	7.3401	0.007175073 14
+//1200
+"ADC1023"	70.5705	0.068983871 15
+"AACA1023"	9.869	0.009647116 16
+"AACB1023"	9.71	0.009491691 17
+*/
+		AAC = static_cast<uint16_t>((response[11] << 8) | response[10]) * constants_array[indexAAC];
+		ADC = static_cast<uint16_t>( (response[7] << 8) | response[6]) * constants_array[indexADC];
+		ACW = VAC * AAC;
 		if (ACW > 2000) {
-			ESP_LOGW(TAG, "ACW exceeds 2000");//, ignoring response");
-			//return;
+			ESP_LOGW(TAG, "ACW exceeds 2000, ignoring response");
+			return;
 		}
-
-
-		if (vac_sensor_) vac_sensor_->publish_state(VAC);
-		if (aac_sensor_) aac_sensor_->publish_state(AAC);
-		if (vdc_sensor_) vdc_sensor_->publish_state(VDC);
-		if (adc_sensor_) adc_sensor_->publish_state(ADC);
-		if (eff_sensor_) eff_sensor_->publish_state(EFF);
-		if (dcw_sensor_) dcw_sensor_->publish_state(DCW);
-		if (acw_sensor_) acw_sensor_->publish_state(ACW);
-		if (temperature_sensor_) temperature_sensor_->publish_state(TEMP);
-		ESP_LOGD(TAG, "Parsed Response: VAC: %.2f, VDC: %.2f, DCW: %.2f, ADC: %.2f. Temp: %d", VAC, VDC, DCW, ADC, TEMP);
 	}
 
 	if (response.length() == 28) {
-		//ESP_LOGD(TAG, "R3?");
-		float VAC = static_cast<int16_t>((response[16] << 8) | response[17]) / 100.0; 
-		float VDC = static_cast<int16_t>((response[14] << 8) | response[15]) / 100.0;
-		float ADC = static_cast<int16_t>((response[18] << 8) | response[19]) / 100.0;
-		float ACW = static_cast<int16_t>((response[24] << 8) | response[25]) / 10;
-		int TEMP = static_cast<int16_t>((response[26] << 8) | response[27]) / 100;
-		float AAC = ACW/VAC;
-		float DCW = VDC * ADC;
-		float EFF = (ACW/DCW)*100.0;
-		ESP_LOGD(TAG, "Parsed F5 Response: VAC: %.2f, VDC: %.2f, DCW: %.2f, ADC: %.2f. Temp: %d", VAC, VDC, DCW, ADC, TEMP);
+		VAC = static_cast<int16_t>((response[16] << 8) | response[17]) / 100.0; 
+    
+		VDC = static_cast<int16_t>((response[14] << 8) | response[15]) / 100.0;
+    
+		ADC = static_cast<int16_t>((response[18] << 8) | response[19]) / 100.0;
+    
+		ACW = static_cast<int16_t>((response[24] << 8) | response[25]) / 10;;
+    
+		TEMP = static_cast<int16_t>((response[26] << 8) | response[27]) / 100;
+    
+		AAC = ACW/VAC;
+
 		if (ADC <= 0 || VDC < 15) {
 			ESP_LOGW(TAG, "ADC <= 0 or VDC < 15, sending retry command 0xF4");
 			uint8_t retry_command[] = {0xF4, 0xFD, 0x08, 0x08, 0xF9, 0xE9, 0x1B, 0x00, 0x00, 0x60, 0x00, 0x0F, 0x15, 0x67};
 			send_command(retry_command, sizeof(retry_command), 0xF4, sizeof(retry_command), inverter_sn_);
-			ESP_LOGW(TAG, "Turning off %s", inverter_sn_.c_str());
+			ESP_LOGD(TAG, "Turning off %s", inverter_sn_.c_str());
 			turnoff = true;
 			return;
 		}
-		if (vac_sensor_) vac_sensor_->publish_state(VAC);
-		if (aac_sensor_) aac_sensor_->publish_state(AAC);
-		if (vdc_sensor_) vdc_sensor_->publish_state(VDC);
-		if (adc_sensor_) adc_sensor_->publish_state(ADC);
-		if (eff_sensor_) eff_sensor_->publish_state(EFF);
-		if (dcw_sensor_) dcw_sensor_->publish_state(DCW);
-		if (acw_sensor_) acw_sensor_->publish_state(ACW);
-		if (temperature_sensor_) temperature_sensor_->publish_state(TEMP);
 	}
+	DCW = VDC * ADC;
+	EFF = (DCW > 0) ? (ACW / DCW) : 0;
+	if (EFF < 1) {
+		EFF = round(EFF * 100);
+	}else {
+		EFF = 0;
+	}
+	if (vac_sensor_) vac_sensor_->publish_state(VAC);
+	if (aac_sensor_) aac_sensor_->publish_state(AAC);
+	if (vdc_sensor_) vdc_sensor_->publish_state(VDC);
+	if (adc_sensor_) adc_sensor_->publish_state(ADC);
+	if (eff_sensor_) eff_sensor_->publish_state(EFF);
+	if (dcw_sensor_) dcw_sensor_->publish_state(DCW);
+	if (acw_sensor_) acw_sensor_->publish_state(ACW);
+	if (temperature_sensor_) temperature_sensor_->publish_state(TEMP);
+	ESP_LOGD(TAG, "Parsed %hhX Response: VAC: %.2f, AAC: %.2f, VDC: %.2f, ADC: %.2f, EFF: %.2f, DCW: %.2f, ACW: %.2f, Temp: %d", response[0], VAC, AAC, VDC, ADC, EFF, DCW, ACW, TEMP);
 }
 
 void WVCComponent::set_inverter_sn(const std::string &sn) {
 	inverter_sn_ = sn;
+	set_inverter_type(sn);
 }
 
 void WVCComponent::set_inverter_type(const std::string &type) {
-	inverter_type_ = type;
+	ESP_LOGD(TAG, "Serial number length: %d", sn.length());
+	if (sn.length() == 4){
+		inverter_type_ = "R2";
+		return;
+	}
+	if (sn.length() == 8){
+		inverter_type_ = "R3"; 
+		return;
+	}
+	inverter_type_ = "Invalid serial number";
+}
+
+void WVCComponent::set_inverter_model(const std::string &model) {
+	inverter_model_ = model;
 }
 
 void WVCComponent::publish_state_once_(text_sensor::TextSensor *text_sensor, const std::string &state) {
@@ -186,7 +309,7 @@ void WVCComponent::publish_state_once_(text_sensor::TextSensor *text_sensor, con
 		return;
 	text_sensor->publish_state(state);
 }
-
+/*
 int16_t WVCComponent::temp_r2_lookup(int16_t value) {
 	switch (value) {
 		case 0:
@@ -704,7 +827,7 @@ int16_t WVCComponent::temp_r2_lookup(int16_t value) {
 		default:
 			return 0;
 	}
-}
+}*/
 
 void WVCComponent::set_vac_sensor(sensor::Sensor *sensor) { vac_sensor_ = sensor; }
 void WVCComponent::set_aac_sensor(sensor::Sensor *sensor) { aac_sensor_ = sensor; }
