@@ -11,7 +11,8 @@ public:
   void loop() override;
 
   void set_inverter_sn(const std::string &sn);
-  void set_inverter_type(const std::string &type);
+  void set_inverter_type(const std::string &sn);
+  void set_inverter_model(const std::string &type);
   void set_throttle(uint32_t throttle) { this->throttle_ = throttle; }
 
   void set_vac_sensor(sensor::Sensor *sensor);
