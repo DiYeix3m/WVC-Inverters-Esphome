@@ -285,7 +285,7 @@ void WVCComponent::set_inverter_sn(const std::string &sn) {
 	set_inverter_type(sn);
 }
 
-void WVCComponent::set_inverter_type(const std::string &type) {
+void WVCComponent::set_inverter_type(const std::string &sn) {
 	ESP_LOGD(TAG, "Serial number length: %d", sn.length());
 	if (sn.length() == 4){
 		inverter_type_ = "R2";
