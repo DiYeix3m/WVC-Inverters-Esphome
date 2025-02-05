@@ -9,10 +9,12 @@ DEPENDENCIES = ["wvc"]
 
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_HARDWARE_REVISION = "hardware_revision"
+CONF_MODEL = "model"
 
 TEXT_SENSORS = [
     CONF_SERIAL_NUMBER,
     CONF_HARDWARE_REVISION,
+    CONF_MODEL,
 ]
 
 
@@ -23,6 +25,9 @@ CONFIG_SCHEMA = cv.Schema(
             {cv.GenerateID(): cv.declare_id(text_sensor.TextSensor)}
         ),
         cv.Optional(CONF_HARDWARE_REVISION): text_sensor.TEXT_SENSOR_SCHEMA.extend(
+            {cv.GenerateID(): cv.declare_id(text_sensor.TextSensor)}
+        ),
+        cv.Optional(CONF_MODEL): text_sensor.TEXT_SENSOR_SCHEMA.extend(
             {cv.GenerateID(): cv.declare_id(text_sensor.TextSensor)}
         ),
     }
