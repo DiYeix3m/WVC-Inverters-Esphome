@@ -59,7 +59,7 @@ void WVCComponent::loop() {
 			raw_data_2[11] = static_cast<uint8_t>(strtol(inverter_sn_.substr(4, 2).c_str(), nullptr, 16));
 			raw_data_2[12] = static_cast<uint8_t>(strtol(inverter_sn_.substr(6, 2).c_str(), nullptr, 16));
 			if (expected_start_byte == 0xF4){
-				raw_data_2[0] = 0xF4;
+				raw_data_2[0] = 0xF3;
 				raw_data_2[13] = 0x66;
 				//{0xF3, 0xFD, 0x08, 0x08, 0xF9, 0xE9, 0x1B, 0x00, 0x00, 0x60, 0x00, 0x0F, 0x15, 0x66};
 				send_command(raw_data_2, sizeof(raw_data_2), 0xF3, sizeof(raw_data_2), inverter_sn_);
@@ -254,7 +254,7 @@ void WVCComponent::parse_response(const std::string &response) {
 		AAC = ACW/VAC;
 
 		if (ADC <= 0 || VDC < 15) {
-			ESP_LOGW(TAG, "ADC <= 0 or VDC < 15, sending retry command 0xF4");
+			ESP_LOGW(TAG, "ADC <= 0 or VDC < 15, restarting inverter");
 			uint8_t retry_command[] = {0xF4, 0xFD, 0x08, 0x08, 0xF9, 0xE9, 0x1B, 0x00, 0x00, 0x60, 0x00, 0x0F, 0x15, 0x67};
 			send_command(retry_command, sizeof(retry_command), 0xF4, sizeof(retry_command), inverter_sn_);
 			ESP_LOGD(TAG, "Turning off %s", inverter_sn_.c_str());
