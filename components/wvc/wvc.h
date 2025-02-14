@@ -36,7 +36,11 @@ public:
  protected:
   void parse_response(const std::string &response);
   void publish_state_once_(text_sensor::TextSensor *text_sensor, const std::string &state);
-  float r2_values(std::string type, uint16_t value);
+  void publish_state_(sensor::Sensor *sensor, float value);
+  void publish_state_(text_sensor::TextSensor *text_sensor, const std::string &state);
+  float vdc_r2_lookup(uint16_t value);
+  float vac_r2_lookup(uint16_t value);
+  int16_t temp_r2_lookup(uint16_t value);
   
  private:
   sensor::Sensor *vac_sensor_{nullptr};
@@ -59,7 +63,8 @@ public:
   std::string inverter_sn_;
   std::string inverter_type_;
   std::string inverter_model_;
-  uint32_t throttle_{0};  
+  uint32_t throttle_{0};
+  uint8_t *raw_data;
   void send_command(uint8_t *command, size_t length, uint8_t expected_start_byte_, size_t expected_length_, const std::string &device_id);
 };
 
