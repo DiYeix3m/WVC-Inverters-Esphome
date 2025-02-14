@@ -28,18 +28,18 @@ void WVCComponent::setup() {
 	if (this->inverter_type_ == "R3") {
 		this->raw_data = new uint8_t[14];
 		uint8_t temp[14] = {0xF5, 0xFD, 0x08, 0x08, 0xF9, 0xE9, 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68};
-		temp[9] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(0, 2).c_str(), nullptr, 16));
-		temp[10] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(2, 2).c_str(), nullptr, 16));
-		temp[11] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(4, 2).c_str(), nullptr, 16));
-		temp[12] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(6, 2).c_str(), nullptr, 16));
 		memcpy(this->raw_data, temp, 14);
+		this->raw_data[9] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(0, 2).c_str(), nullptr, 16));
+		this->raw_data[10] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(2, 2).c_str(), nullptr, 16));
+		this->raw_data[11] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(4, 2).c_str(), nullptr, 16));
+		this->raw_data[12] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(6, 2).c_str(), nullptr, 16));
 	}
 	if (this->inverter_type_ == "R2") {
 		this->raw_data = new uint8_t[8];
 		uint8_t temp[14] = {0xF2, 0x00, 0x00, 0x65, 0xFD, 0x08, 0x08, 0xF9};
-		temp[1] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(0, 2).c_str(), nullptr, 16));
-		temp[2] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(2, 2).c_str(), nullptr, 16));
 		memcpy(this->raw_data, temp, 8);
+		this->raw_data[1] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(0, 2).c_str(), nullptr, 16));
+		this->raw_data[2] = static_cast<uint8_t>(strtol(this->inverter_sn_.substr(2, 2).c_str(), nullptr, 16));
 	}
 }
 
@@ -70,14 +70,14 @@ void WVCComponent::loop() {
 	if (!waiting_for_response && millis() - last_device_query_time >= throttle_) {
 		if (this->inverter_type_ == "R3") {
 			if (expected_start_byte == 0xF4){
-				raw_data[0] = 0xF3;
-				raw_data[13] = 0x66;
+				this->raw_data[0] = 0xF3;
+				this->raw_data[13] = 0x66;
 				//{0xF3, 0xFD, 0x08, 0x08, 0xF9, 0xE9, 0x1B, 0x00, 0x00, 0x60, 0x00, 0x0F, 0x15, 0x66};
 				this->send_command(this->raw_data, sizeof(this->raw_data), this->raw_data[0], sizeof(this->raw_data), this->inverter_sn_);
 				ESP_LOGW(TAG, "Turning on %s", this->inverter_sn_.c_str());
 				turnon = true;
-				raw_data[0] = 0xF5;
-				raw_data[13] = 0x68;
+				this->raw_data[0] = 0xF5;
+				this->raw_data[13] = 0x68;
 				return;
 			}
 			this->send_command(this->raw_data, sizeof(this->raw_data), this->raw_data[0], 28, this->inverter_sn_);
@@ -248,7 +248,7 @@ void WVCComponent::parse_response(const std::string &response) {
 		if (ADC <= 0 || VDC < 15) {
 			ESP_LOGW(TAG, "ADC <= 0 or VDC < 15, restarting inverter");
 			uint8_t retry_command[] = {0xF4, 0xFD, 0x08, 0x08, 0xF9, 0xE9, 0x1B, 0x00, 0x00, 0x60, 0x00, 0x0F, 0x15, 0x67};
-			send_command(retry_command, sizeof(retry_command), 0xF4, sizeof(retry_command), inverter_sn_);
+			this->send_command(retry_command, sizeof(retry_command), 0xF4, sizeof(retry_command), inverter_sn_);
 			ESP_LOGD(TAG, "Turning off %s", inverter_sn_.c_str());
 			turnoff = true;
 			return;
